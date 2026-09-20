@@ -11,7 +11,7 @@ import dotenv from "dotenv";   // to make consitency use this import syntax so t
 // import { DB_NAME } from "./constants";
 
 dns.setServers(["8.8.8.8"]);
-dotenv.config({path:'./env'})
+dotenv.config({path:'./.env'})
 
 // this is the 2nd approach which is stadard practice
 
