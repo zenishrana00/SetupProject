@@ -8,8 +8,8 @@ import fs from "fs"
 const generateAccessAndRefreshTokens= async(userId)=>{
     try {
         const user= await User.findById(userId)
-        const accessToken= user.generateAccessToken
-        const refreshToken= user.generateRefreshToken
+        const accessToken= user.generateAccessToken()
+        const refreshToken= user.generateRefreshToken()
 
         user.refreshToken=refreshToken
         await user.save({ validateBeforeSave:false })
@@ -17,6 +17,7 @@ const generateAccessAndRefreshTokens= async(userId)=>{
         return { accessToken, refreshToken }
 
     } catch (error) {
+        // console.log("TOKEN ERROR:", error);
         throw new ApiError(500,"Something went wrong while generating refresh and access token")
     }
 }
@@ -129,11 +130,11 @@ const loginUser= asyncHandler(async (req,res)=>{
 
     const {email, username, password}= req.body
 
-    if(!username || !email){
+    if(!(username || email)){      // if(!username && !email)
         throw new ApiError(400,"username or password is required")
     }
 
-    const user=User.findOne({
+    const user= await User.findOne({
         $or: [{username}, { email }]
     })
 
@@ -149,7 +150,7 @@ const loginUser= asyncHandler(async (req,res)=>{
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
 
-    const loggedInUser= User.findById(user._id).select(" -password -refreshToken ")
+    const loggedInUser= await User.findById(user._id).select(" -password -refreshToken ")
 
     const options ={
         httpOnly:true,
@@ -177,7 +178,7 @@ const logoutUser = asyncHandler( async (req,res)=>{
         req.user._id,
         {
             $set: {
-                refreshToken: undefinec
+                refreshToken: undefined
             }
         },
         {
