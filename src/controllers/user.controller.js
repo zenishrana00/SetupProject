@@ -4,6 +4,7 @@ import { User } from "../models/user.models.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
 import fs from "fs"
 
 const generateAccessAndRefreshTokens= async(userId)=>{
@@ -248,7 +249,7 @@ const changeCurrentPassword= asyncHandler ( async (req,res)=>{
     const { oldPassword, newPassword} = req.body
 
     const user = await User.findById(req.user?._id)
-    const isPasswordCorrect= await isPasswordCorrect(oldPassword)
+    const isPasswordCorrect= await user.isPasswordCorrect(oldPassword)
 
     if(!isPasswordCorrect){
         throw new ApiError(400,"Invalid old Password")
@@ -374,7 +375,7 @@ const getUserChannelProfile = asyncHandler( async (req,res)=>{
         {
             $lookup:{
                 from:"subscriptions",
-                localfield:"_id",
+                localField:"_id",
                 foreignField:"channel",
                 as:"subscribers"
             }
@@ -382,7 +383,7 @@ const getUserChannelProfile = asyncHandler( async (req,res)=>{
         {
             $lookup:{
                 from:"subscriptions",
-                localfield:"_id",
+                localField:"_id",
                 foreignField:"subscriber",
                 as:"subscribedTo"
             }
@@ -442,14 +443,14 @@ const getWatchHistory= asyncHandler( async( req,res)=>{
         {
             $lookup:{
                 from: "videos",
-                localfield: "watchHistory",
+                localField: "watchHistory",
                 foreignField:"_id",
                 as:"watchHistory",
                 pipeline:[
                     {
                         $lookup:{
                             from: "users",
-                            localfield:"owner",
+                            localField:"owner",
                             foreignField:"_id",
                             as:"owner",
                             pipeline:[
@@ -466,7 +467,7 @@ const getWatchHistory= asyncHandler( async( req,res)=>{
                     {
                         $addFields:{
                             owner:{
-                                $first: "owner"
+                                $first: "$owner"
                             }
                         }
                     }
